@@ -1,0 +1,30 @@
+const List<String> currencies = [
+  'USD',
+  'TWD',
+  'CNY',
+  'JPY',
+  'IDR',
+  'VND',
+  'PHP',
+  'INR',
+  'THB',
+  'HKD',
+  'GBP',
+  'AUD',
+  'EUR',
+  'CHF',
+  'CAD',
+  'MXN',
+];
+
+const List<String> cryptos = [
+  "BTC",
+  "ETH",
+  "SOL",
+  "XRP",
+  "BNB",
+  "ADA",
+  "DOGE",
+  "MATIC",
+  "TRX",
+];
