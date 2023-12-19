@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:crypto_exchange/data/list_data.dart';
 import 'package:crypto_exchange/network/price_api/price_method.dart';
 import 'package:crypto_exchange/pages/calculator_page.dart';
@@ -17,8 +18,38 @@ class IndexPage extends StatefulWidget {
 class _IndexPageState extends State<IndexPage> {
   List<DropdownMenuItem<String>> dropdownItems = [];
   String _selectedCurrency = currencies.first;
+  Timer? _timer;
+  Duration myDuration = Duration(seconds: 10);
 
   late PriceMethod _priceMethod;
+
+  String strDigits(int n) {
+    return n.toString().padLeft(2, '0');
+  }
+
+  void start() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => setCountDown());
+  }
+
+  void reset() {
+    _timer!.cancel();
+    _priceMethod.getAllPrice(this._selectedCurrency);
+    setState(() {
+      myDuration = const Duration(seconds: 10);
+    });
+  }
+
+  void setCountDown() {
+    setState(() {
+      final s = myDuration.inSeconds - 1;
+      if (s < 0) {
+        reset();
+        start();
+      } else {
+        myDuration = Duration(seconds: s);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -35,8 +66,14 @@ class _IndexPageState extends State<IndexPage> {
     );
 
     _priceMethod = Provider.of<PriceMethod>(context, listen: false);
-    _priceMethod.getAllPrice(_selectedCurrency);
+    _priceMethod.getAllPrice(_selectedCurrency).then((value) => start());
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer!.cancel();
+    super.dispose();
   }
 
   @override
@@ -49,6 +86,8 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   ObstructingPreferredSizeWidget getNavigationBar() {
+    final minutes = strDigits(myDuration.inMinutes.remainder(60));
+    final seconds = strDigits(myDuration.inSeconds.remainder(60));
     return CupertinoNavigationBar(
       backgroundColor: CupertinoColors.black.withOpacity(.4),
       middle: d.DropDownSelect(
@@ -62,6 +101,34 @@ class _IndexPageState extends State<IndexPage> {
               _priceMethod.getAllPrice(_selectedCurrency);
             });
           }),
+      trailing: SizedBox(
+        width: 80,
+        child: CupertinoButton(
+          onPressed: () {
+            reset();
+            start();
+            setState(() {
+              _priceMethod.getAllPrice(this._selectedCurrency);
+            });
+          },
+          padding: EdgeInsets.all(0),
+          child: Row(
+            children: [
+              Icon(
+                CupertinoIcons.refresh_thin,
+                color: CupertinoColors.white,
+              ),
+              SizedBox(width: 5),
+              Text(
+                '$minutes: $seconds',
+                style: TextStyle(
+                  color: CupertinoColors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

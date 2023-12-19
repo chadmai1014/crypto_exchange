@@ -21,7 +21,7 @@ class PriceMethod with ChangeNotifier {
     return list;
   }
 
-  getAllPrice(String selectedCurrency) {
+  Future getAllPrice(String selectedCurrency) async {
     for (var model in _priceList) {
       Future.wait([
         callAPI(model, selectedCurrency, true),

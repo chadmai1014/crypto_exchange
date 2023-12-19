@@ -16,7 +16,7 @@ class DropDownSelect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(left: 50, right: 50),
+      padding: const EdgeInsets.only(left: 80),
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -28,7 +28,7 @@ class DropDownSelect extends StatelessWidget {
       child: Material(
         child: d.DropdownButton(
           icon: const Icon(
-            Icons.arrow_downward,
+            Icons.arrow_drop_down,
             color: Colors.black26,
           ),
           style: const TextStyle(
@@ -36,7 +36,7 @@ class DropDownSelect extends StatelessWidget {
             color: Colors.black,
           ),
           underline: Container(),
-          iconSize: 32,
+          iconSize: 28,
           isExpanded: true,
           items: items,
           onChanged: onChanged,

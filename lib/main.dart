@@ -8,19 +8,15 @@ import 'network/price_api/price_method.dart';
 
 void main() {
   runApp(
-    ///Provider
-    ChangeNotifierProvider(
-      create: (context) {
-        ///1. 將PriceModel.dart 的 asset 賦值
-        final List<PriceModel> list = cryptos
-            .map((e) => PriceModel(data: [
-                  CurrencyData(asset: e),
-                ]))
-            .toList();
-
-        ///傳值
-        return PriceMethod(list);
-      },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (_) => PriceMethod(cryptos
+                .map((e) => PriceModel(data: [
+                      CurrencyData(asset: e),
+                    ]))
+                .toList())),
+      ],
       child: const CupertinoApp(
         localizationsDelegates: [
           ...GlobalMaterialLocalizations.delegates,

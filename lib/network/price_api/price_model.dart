@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 
 class PriceModel {
-  ///預設正確情況
   String? code;
   String? message;
   String? messageDetail;
@@ -42,6 +41,7 @@ class PriceModel {
     return jsonEncode(this);
   }
 
+  ///重置，預設為正確情況
   reset() {
     code = '000000';
     message = null;
