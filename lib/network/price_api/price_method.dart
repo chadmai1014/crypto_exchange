@@ -30,22 +30,26 @@ class PriceMethod with ChangeNotifier {
     }
   }
 
-  Future callAPI(PriceModel model, String selectedCurrency, bool isBuy) async {
-    http.Response res = await http.post(
-      Uri.parse(
-          'https://c2c.binance.com/bapi/c2c/v2/public/c2c/adv/quoted-price'),
-      headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      body: jsonEncode({
-        "assets": [model.data!.first.asset],
-        "fiatCurrency": selectedCurrency,
-        "tradeType": isBuy ? "BUY" : "SELL",
-        "fromUserRole": "USER",
-      }),
-    );
+  Future callAPI(
+    PriceModel model,
+    String selectedCurrency,
+    bool isBuy,
+  ) async {
+    late http.Response res;
+    try {
+      res = await http.post(
+        Uri.parse(
+            'https://c2c.binance.com/bapi/c2c/v2/public/c2c/adv/quoted-price'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          "assets": [model.data!.first.asset],
+          "fiatCurrency": selectedCurrency,
+          "tradeType": isBuy ? "BUY" : "SELL",
+          "fromUserRole": "USER",
+        }),
+      );
 
-    if (res.statusCode == 200) {
       var content = jsonDecode(res.body) as Map<String, dynamic>;
-
       model.reset();
       model.setValue(content);
       model.data!.first.setReferencePrice(
@@ -55,8 +59,12 @@ class PriceMethod with ChangeNotifier {
       );
 
       notifyListeners();
-    } else {
-      throw Exception('Failed to load result');
+    } on Exception catch (err) {
+      model.data!.first.currency = selectedCurrency;
+      model.data!.first.referenceBuyPrice = -1;
+      model.data!.first.referenceSellPrice = -1;
+
+      notifyListeners();
     }
   }
 

@@ -19,7 +19,7 @@ class _IndexPageState extends State<IndexPage> {
   List<DropdownMenuItem<String>> dropdownItems = [];
   String _selectedCurrency = currencies.first;
   Timer? _timer;
-  Duration myDuration = Duration(seconds: 10);
+  Duration myDuration = const Duration(seconds: 10);
 
   late PriceMethod _priceMethod;
 
@@ -33,7 +33,7 @@ class _IndexPageState extends State<IndexPage> {
 
   void reset() {
     _timer!.cancel();
-    _priceMethod.getAllPrice(this._selectedCurrency);
+    _priceMethod.getAllPrice(_selectedCurrency);
     setState(() {
       myDuration = const Duration(seconds: 10);
     });
@@ -49,6 +49,16 @@ class _IndexPageState extends State<IndexPage> {
         myDuration = Duration(seconds: s);
       }
     });
+  }
+
+  String returnPrice(double? price) {
+    if (price == -1) {
+      return "網路錯誤";
+    } else if (price == null) {
+      return "";
+    } else {
+      return price.toString();
+    }
   }
 
   @override
@@ -108,20 +118,20 @@ class _IndexPageState extends State<IndexPage> {
             reset();
             start();
             setState(() {
-              _priceMethod.getAllPrice(this._selectedCurrency);
+              _priceMethod.getAllPrice(_selectedCurrency);
             });
           },
-          padding: EdgeInsets.all(0),
+          padding: const EdgeInsets.all(0),
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 CupertinoIcons.refresh_thin,
                 color: CupertinoColors.white,
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               Text(
                 '$minutes: $seconds',
-                style: TextStyle(
+                style: const TextStyle(
                   color: CupertinoColors.white,
                 ),
               ),
@@ -133,18 +143,22 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   Widget getListView() {
-    var _screenHeight = MediaQuery.of(context).size.height - 97;
-    var _screenWidth = MediaQuery.of(context).size.width;
+    var screenHeight = MediaQuery.of(context).size.height - 97;
+    var screenWidth = MediaQuery.of(context).size.width;
     return Consumer<PriceMethod>(
       builder: (cxt, priceMethod, child) {
         return ListView.builder(
           physics: const ClampingScrollPhysics(),
-          itemExtent: _screenHeight / 9,
-          padding: EdgeInsets.only(top: 97),
+          itemExtent: screenHeight / 9,
+          padding: const EdgeInsets.only(top: 97),
           itemCount: priceMethod.priceList.length,
           itemBuilder: (BuildContext context, int index) {
             return CupertinoButton(
               onPressed: () {
+                if (priceMethod.priceList[index].referenceSellPrice! == -1 ||
+                    priceMethod.priceList[index].referenceBuyPrice! == -1) {
+                  return;
+                }
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
@@ -160,65 +174,65 @@ class _IndexPageState extends State<IndexPage> {
               },
               color: CupertinoColors.black.withOpacity(.7),
               borderRadius: BorderRadius.circular(0),
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(
                 children: [
                   ///虛擬貨幣的title
                   Text(
                     priceMethod.priceList[index].asset!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: CupertinoColors.white,
                       fontSize: 22,
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   SizedBox(
                     ///買入賣出的欄位寬度
-                    width: _screenWidth / 4 * 3,
+                    width: screenWidth / 4 * 3,
                     child: Row(
                       children: [
                         Row(
                           children: [
-                            Text(
+                            const Text(
                               '買入：',
                               style: TextStyle(
                                 color: CupertinoColors.systemGreen,
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: .5,
                             ),
                             Text(
-                              priceMethod.priceList[index].referenceSellPrice
-                                  .toString(),
-                              style: TextStyle(
+                              returnPrice(priceMethod
+                                  .priceList[index].referenceSellPrice),
+                              style: const TextStyle(
                                 color: CupertinoColors.white,
                                 fontSize: 16,
                               ),
                             ),
                           ],
                         ),
-                        Spacer(),
+                        const Spacer(),
                         SizedBox(
                           ///賣出的欄位寬度
-                          width: _screenWidth / 17 * 6.5,
+                          width: screenWidth / 17 * 6.5,
                           child: Row(
                             children: [
-                              Text(
+                              const Text(
                                 '賣出：',
                                 style: TextStyle(
                                   color: CupertinoColors.systemRed,
                                   fontSize: 16,
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: .5,
                               ),
                               Text(
-                                priceMethod.priceList[index].referenceBuyPrice
-                                    .toString(),
-                                style: TextStyle(
+                                returnPrice(priceMethod
+                                    .priceList[index].referenceBuyPrice),
+                                style: const TextStyle(
                                   color: CupertinoColors.white,
                                   fontSize: 16,
                                 ),
