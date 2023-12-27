@@ -5,8 +5,11 @@ import 'package:crypto_exchange/pages/calculator_page.dart';
 import 'package:crypto_exchange/widgets/dropdown_select.dart' as d;
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-
+import '../network/price_api/price_model.dart';
 import '../widgets/dropdown.dart';
+
+StreamController<List<CurrencyData>> streamController =
+    StreamController.broadcast();
 
 class IndexPage extends StatefulWidget {
   const IndexPage({super.key});
@@ -16,6 +19,7 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
+  ///Declaration
   List<DropdownMenuItem<String>> dropdownItems = [];
   String _selectedCurrency = currencies.first;
   Timer? _timer;
@@ -23,31 +27,33 @@ class _IndexPageState extends State<IndexPage> {
 
   late PriceMethod _priceMethod;
 
+  late StreamSubscription streamSubscription;
+  late StreamSink streamSink;
+
+  ///Methods
   String strDigits(int n) {
     return n.toString().padLeft(2, '0');
   }
 
   void start() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => setCountDown());
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {
+        final s = myDuration.inSeconds - 1;
+        if (s < 0) {
+          reset();
+          start();
+        } else {
+          myDuration = Duration(seconds: s);
+        }
+      });
+    });
   }
 
   void reset() {
     _timer!.cancel();
-    _priceMethod.getAllPrice(_selectedCurrency);
+    _priceMethod.getAllPrice(_selectedCurrency).then((_) => addDataToStream());
     setState(() {
       myDuration = const Duration(seconds: 10);
-    });
-  }
-
-  void setCountDown() {
-    setState(() {
-      final s = myDuration.inSeconds - 1;
-      if (s < 0) {
-        reset();
-        start();
-      } else {
-        myDuration = Duration(seconds: s);
-      }
     });
   }
 
@@ -61,8 +67,14 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
+  void addDataToStream() {
+    debugPrint("addDataToStream");
+    streamSink.add(_priceMethod.priceList);
+  }
+
   @override
   void initState() {
+    super.initState();
     dropdownItems = List.generate(
       currencies.length,
       (index) => DropdownMenuItem(
@@ -75,14 +87,25 @@ class _IndexPageState extends State<IndexPage> {
       ),
     );
 
+    streamSink = streamController.sink;
+
     _priceMethod = Provider.of<PriceMethod>(context, listen: false);
-    _priceMethod.getAllPrice(_selectedCurrency).then((value) => start());
-    super.initState();
+    _priceMethod
+        .getAllPrice(
+      _selectedCurrency,
+    )
+        .then(
+      (_) {
+        start();
+        addDataToStream();
+      },
+    );
   }
 
   @override
   void dispose() {
-    _timer!.cancel();
+    // _timer!.cancel();
+    streamController.close();
     super.dispose();
   }
 
@@ -163,6 +186,7 @@ class _IndexPageState extends State<IndexPage> {
                   context,
                   CupertinoPageRoute(
                     builder: (_) => CalculatorPage(
+                        index: index,
                         currency: priceMethod.priceList[index].currency!,
                         cryptoCoin: priceMethod.priceList[index].asset!,
                         buyPrice:

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:crypto_exchange/pages/index_page.dart';
 import 'package:crypto_exchange/widgets/converter_card.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -6,6 +8,7 @@ class CalculatorPage extends StatefulWidget {
   final String cryptoCoin;
   final double buyPrice;
   final double sellPrice;
+  final int index;
 
   const CalculatorPage({
     super.key,
@@ -13,6 +16,7 @@ class CalculatorPage extends StatefulWidget {
     required this.sellPrice,
     required this.currency,
     required this.cryptoCoin,
+    required this.index,
   });
 
   @override
@@ -20,10 +24,14 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
+  late StreamSubscription priceListSubscription;
   late TextEditingController upController = TextEditingController();
   late TextEditingController downController = TextEditingController();
   bool isReverse = false;
   bool isBuy = true;
+
+  late double realBuyPrice = widget.buyPrice;
+  late double realSellPrice = widget.sellPrice;
 
   String getReference(String fromControllerText) {
     ///買入
@@ -32,12 +40,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ?
 
           ///法幣 to 虛幣
-          ((double.tryParse(fromControllerText) ?? 0) / widget.buyPrice)
-              .toString()
+          ((double.tryParse(fromControllerText) ?? 0) / realBuyPrice).toString()
           :
 
           ///虛幣 to 法幣
-          ((double.tryParse(fromControllerText) ?? 0) * widget.buyPrice)
+          ((double.tryParse(fromControllerText) ?? 0) * realBuyPrice)
               .toString();
     }
 
@@ -47,20 +54,36 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ?
 
           ///法幣 to 虛幣
-          ((double.tryParse(fromControllerText) ?? 0) / widget.sellPrice)
-              .toString()
+          ((double.tryParse(fromControllerText) ?? 0) / realBuyPrice).toString()
           :
 
           ///虛幣 to 法幣
-          ((double.tryParse(fromControllerText) ?? 0) * widget.sellPrice)
+          ((double.tryParse(fromControllerText) ?? 0) * realBuyPrice)
               .toString();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    priceListSubscription = streamController.stream.listen((list) {
+      debugPrint("widget.buyPrice= ${widget.buyPrice}");
+      debugPrint("widget.sellPrice= ${widget.sellPrice}");
+      setState(() {
+        debugPrint("new buyPrice=${list[widget.index].referenceSellPrice!}");
+        debugPrint("new sellPrice=${list[widget.index].referenceBuyPrice!}");
+        realBuyPrice = list[widget.index].referenceSellPrice!;
+        realSellPrice = list[widget.index].referenceBuyPrice!;
+      });
+    });
   }
 
   @override
   void dispose() {
     upController.dispose();
     downController.dispose();
+    priceListSubscription.cancel();
     super.dispose();
   }
 
@@ -149,8 +172,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   child: Center(
                     child: Text(
                       (isBuy)
-                          ? widget.buyPrice.toString()
-                          : widget.sellPrice.toString(),
+                          ? realBuyPrice.toString()
+                          : realSellPrice.toString(),
                       style: const TextStyle(
                         fontSize: 14,
                         height: 1,
